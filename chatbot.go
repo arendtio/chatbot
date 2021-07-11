@@ -2,8 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/dpatrie/chatbot/bot"
 	"log"
+
+	"github.com/arendtio/chatbot/bot"
 )
 
 func main() {
