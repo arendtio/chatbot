@@ -1,9 +1,10 @@
 package bot
 
 import (
-	"github.com/mattn/go-xmpp"
 	"log"
 	"os"
+
+	xmpp "github.com/mattn/go-xmpp"
 )
 
 type XMPPBotOptions struct {
@@ -51,7 +52,7 @@ func (b *XMPPBot) Connect() error {
 	}
 
 	b.logger.Printf("Joining %s with resource %s \n", b.Options.Room, b.Options.Resource)
-	b.client.JoinMUC(b.Options.Room + "/" + b.Options.Resource)
+	b.client.JoinMUCNoHistory(b.Options.Room+"/"+b.Options.Resource, "")
 	return nil
 }
 
