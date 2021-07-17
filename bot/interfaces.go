@@ -3,8 +3,9 @@ package bot
 type Bot interface {
 	Name() string
 	Send(msg string)
+	AddPlugin(p Plugin)
 	Connect() error
-	Listen(recv chan Message)
+	Listen()
 }
 
 //*************************************************

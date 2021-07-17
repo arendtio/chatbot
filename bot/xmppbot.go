@@ -30,12 +30,17 @@ func (m XMPPBotMessage) From() string {
 
 type XMPPBot struct {
 	Options XMPPBotOptions
+	Plugins []Plugin
 	client  *xmpp.Client
 	logger  *log.Logger
 }
 
 func (b *XMPPBot) Name() string {
 	return b.Options.Room + "/" + b.Options.Resource
+}
+
+func (b *XMPPBot) AddPlugin(p Plugin) {
+	b.Plugins = append(b.Plugins, p)
 }
 
 func (b *XMPPBot) Send(msg string) {
@@ -56,21 +61,23 @@ func (b *XMPPBot) Connect() error {
 	return nil
 }
 
-func (b *XMPPBot) Listen(recv chan Message) {
-	go func() {
-		for {
-			chat, err := b.client.Recv()
-			if err != nil {
-				b.logger.Printf("Error: %s \n", err)
-			}
-			switch v := chat.(type) {
-			case xmpp.Chat:
-				recv <- XMPPBotMessage{body: v.Text, from: v.Remote}
-			case xmpp.Presence:
-				b.logger.Printf("Presence: %+v \n", v)
-			}
+func (b *XMPPBot) Listen() {
+	for {
+		chat, err := b.client.Recv()
+		if err != nil {
+			b.logger.Printf("Error: %s \n", err)
+			break // receiving an error breaks the loop and allows a reconnect
 		}
-	}()
+		switch v := chat.(type) {
+		case xmpp.Chat:
+			msg := XMPPBotMessage{body: v.Text, from: v.Remote}
+			for _, p := range b.Plugins {
+				p.Execute(msg, b)
+			}
+		case xmpp.Presence:
+			b.logger.Printf("Presence: %+v \n", v)
+		}
+	}
 }
 
 func (b *XMPPBot) SetLogger(logger *log.Logger) {

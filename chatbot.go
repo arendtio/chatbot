@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
 
 	"github.com/arendtio/chatbot/bot"
 )
@@ -18,28 +19,19 @@ func main() {
 
 	//TODO:Add some validation...but whatever for now
 
-	chatbot := ChatBot{
-		bot.NewXMPPBot(host, user, pass, room, name),
-		[]bot.Plugin{
-			bot.PluginEcho{},
-		},
-	}
-	err := chatbot.Connect()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	chatbot := bot.NewXMPPBot(host, user, pass, room, name)
+	chatbot.AddPlugin(bot.PluginEcho{})
 
-	recv := make(chan bot.Message)
-	chatbot.Listen(recv)
-
-	for msg := range recv {
-		for _, p := range chatbot.Plugins {
-			p.Execute(msg, chatbot)
+	for {
+		err := chatbot.Connect()
+		if err != nil {
+			log.Println(err)
+			log.Println("Connect failed, waiting 60 seconds...")
+			time.Sleep(60 * time.Second)
+			continue
 		}
-	}
-}
 
-type ChatBot struct {
-	*bot.XMPPBot
-	Plugins []bot.Plugin
+		chatbot.Listen()
+		time.Sleep(10 * time.Second)
+	}
 }
